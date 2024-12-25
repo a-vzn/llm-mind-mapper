@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": 4902506721656406579, "label": "fulfillment", "shape": "dot", "title": "A state of feeling satisfied and content with one\u0027s life, often tied to achieving goals or finding purpose."}, {"color": "#97c2fc", "id": -740331180253303952, "label": "goals", "shape": "dot", "title": "Specific objectives or targets that an individual strives to achieve in their life."}, {"color": "#97c2fc", "id": 2848754144729030543, "label": "purpose", "shape": "dot", "title": "A sense of direction or meaning that gives one\u0027s life significance and importance."}, {"color": "#97c2fc", "id": -4367234082558455157, "label": "religion", "shape": "dot", "title": "Not mentioned explicitly, but implied as a societal pressure for certain ideas about fulfillment (e.g., career success, having a family)."}, {"color": "#97c2fc", "id": 47161458503060487, "label": "productivity", "shape": "dot", "title": "The state of being productive, often tied to achieving goals or being successful."}, {"color": "#97c2fc", "id": -9042942668791017468, "label": "success", "shape": "dot", "title": "Achieving a desired outcome or goal, often tied to external validation."}, {"color": "#97c2fc", "id": 3916508090850322004, "label": "creativity", "shape": "dot", "title": "The ability to create new and original things, such as art, music, writing, etc."}, {"color": "#97c2fc", "id": 7917367525012117298, "label": "connection", "shape": "dot", "title": "Relationships with others, which can provide a sense of belonging and fulfillment."}, {"color": "#97c2fc", "id": -6119518242181097512, "label": "values", "shape": "dot", "title": "Core principles or beliefs that guide one\u0027s actions and decisions in life."}, {"color": "#97c2fc", "id": -5024349497303781077, "label": "comparison", "shape": "dot", "title": "The tendency to compare oneself to others, often leading to feelings of inadequacy or dissatisfaction."}, {"color": "#97c2fc", "id": 5466752149305034396, "label": "flow", "shape": "dot", "title": "A state of being completely absorbed and engaged in an activity, losing track of time and feeling a sense of joy and fulfillment."}]);
+                  edges = new vis.DataSet([{"from": 4902506721656406579, "to": -740331180253303952}, {"from": 4902506721656406579, "to": 2848754144729030543}, {"from": -740331180253303952, "to": -9042942668791017468}, {"from": 2848754144729030543, "to": -6119518242181097512}, {"from": 3916508090850322004, "to": 7917367525012117298}, {"from": -5024349497303781077, "to": 4902506721656406579}, {"from": 5466752149305034396, "to": 4902506721656406579}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
