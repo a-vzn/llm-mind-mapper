@@ -4,17 +4,24 @@ A Python tool that uses Large Language Models to analyze conversations and creat
 
 ## Prerequisites
 
-- Python 3.8 or higher
-- [Ollama](https://ollama.com/) for LLM functionality
+### [Pyenv](https://github.com/pyenv/pyenv)
+It is recommended to use `pyenv` for managing Python versions. follow [these basic instructions](https://github.com/pyenv/pyenv) to install `pyenv`
+
+```bash
+$ pyenv install 3.x.x
+```
+A minimum python version of 3.8 is required for this application.
+
+### [Ollama](https://ollama.com/)
   ```bash
   # Install Ollama
   https://ollama.com/download
-  
+
+  # Pull default model
+  ollama pull llama3.1  
+
   # Start Ollama server
   ollama serve
-  
-  # Pull default model
-  ollama pull llama3.1
   ```
 
 ## Tech Stack
@@ -46,9 +53,6 @@ cd llm-mind-mapper
 # Create a virtual environment (optional but recommended)
 pyenv virtualenv create llm-mind-mapper
 pyenv activate llm-mind-mapper
-
-# Install dependencies
-pip install -r requirements.txt
 
 # Install the package in development mode
 pip install -e .
