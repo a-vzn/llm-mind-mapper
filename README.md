@@ -2,6 +2,29 @@
 
 A Python tool that uses Large Language Models to analyze conversations and create interactive mind maps. The tool processes conversation transcripts and generates visual representations of concepts and their relationships.
 
+## Prerequisites
+
+- Python 3.8 or higher
+- [Ollama](https://ollama.com/) for LLM functionality
+  ```bash
+  # Install Ollama
+  https://ollama.com/download
+  
+  # Start Ollama server
+  ollama serve
+  
+  # Pull default model
+  ollama pull llama3.1
+  ```
+
+## Tech Stack
+
+- **LLM Integration**: Langchain and Langchain-Ollama
+- **Visualization**: PyVis for interactive network graphs
+- **Web Interface**: Streamlit
+- **Configuration**: Pydantic
+- **Core Dependencies**: NetworkX, Pandas, Python-dotenv
+
 ## Features
 
 - Process conversation transcripts using LLMs
@@ -11,17 +34,21 @@ A Python tool that uses Large Language Models to analyze conversations and creat
 - Export mind maps as HTML
 - Configurable settings through a central configuration system
 - Comprehensive logging system
+- Multiple LLM model support through Ollama
 
 ## Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/llm-mind-mapper.git
+git clone https://github.com/aviralsomani/llm-mind-mapper.git
 cd llm-mind-mapper
 
 # Create a virtual environment (optional but recommended)
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
 
 # Install the package in development mode
 pip install -e .
@@ -37,9 +64,11 @@ streamlit run streamlit_app.py
 
 This will start the web interface where you can:
 1. Enter conversation transcripts
-2. Configure LLM model and output settings
-3. Generate and view interactive mind maps
-4. See statistics about the generated map
+2. Select and configure LLM models
+3. Pull new Ollama models as needed
+4. Generate and view interactive mind maps
+5. See statistics about the generated map
+6. Customize output settings
 
 ### Using as a Python Package
 
@@ -69,31 +98,6 @@ mind_mapper = MindMapper(conversation_map, config=config)
 mind_mapper.save("my_map.html")
 ```
 
-## Project Structure
-
-```
-llm_mind_mapper/
-├── __init__.py          # Package initialization and exports
-├── mind_mapper.py       # Core mind mapping functionality
-├── config.py            # Configuration management
-├── conversation_result.py    # Data structures for analysis results
-└── conversation_mapper_llm_client.py  # LLM interaction logic
-tests/
-├── __init__.py
-└── test_mind_mapper.py  # Unit tests
-streamlit_app.py         # Web interface
-setup.py                 # Package installation configuration
-README.md               # Documentation
-```
-
-### Key Components
-
-- **mind_mapper.py**: Core class for creating and managing mind maps using PyVis
-- **config.py**: Configuration management with customizable settings
-- **conversation_mapper_llm_client.py**: Handles LLM interaction and conversation analysis
-- **conversation_result.py**: Data structures for storing analysis results
-- **streamlit_app.py**: Web interface for easy interaction with the tool
-
 ## Configuration
 
 The tool can be configured through the `MindMapperConfig` class with the following options:
@@ -109,10 +113,38 @@ config = MindMapperConfig(
 )
 ```
 
+### Available Models
+
+The tool supports any model available through Ollama. You can:
+1. Use the web interface to select from available models through a dropdown menu
+2. Pull new models through the interface using the "Pull New Model" button
+3. Manually pull models using the Ollama CLI:
+   ```bash
+   ollama pull llama3.1    # Default model
+   ollama pull llama2      # Alternative model
+   ollama pull llama2:13b  # Larger model variant
+   ```
+
+## Project Structure
+
+```
+.
+├── llm_mind_mapper/           # Main package directory
+│   ├── __init__.py           # Package initialization and exports
+│   ├── mind_mapper.py        # Core mind mapping functionality
+│   ├── config.py             # Configuration management
+│   ├── conversation_result.py # Data structures for analysis results
+│   └── conversation_mapper_llm_client.py  # LLM interaction logic
+├── tests/                    # Test directory
+│   ├── __init__.py
+│   └── test_mind_mapper.py   # Unit tests
+├── output/                   # GIT IGNORED - default output directory for mind maps
+├── streamlit_app.py         # Web interface
+├── setup.py                 # Package installation configuration
+├── requirements.txt         # Project dependencies
+└── README.md               # Documentation
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 

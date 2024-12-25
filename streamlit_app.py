@@ -29,10 +29,10 @@ def get_available_models():
             models = response.json()
             # Extract model names from the response
             model_names = [model['name'] for model in models['models']]
-            return sorted(model_names) if model_names else ["llama2"]
+            return sorted(model_names) if model_names else ["llama3.1"]
     except Exception as e:
         st.warning(f"Could not fetch models: {str(e)}")
-    return ["llama2"]  # Default fallback
+    return ["llama3.1"]  # Default fallback
 
 # Title of the app
 st.title("Conversation Mind Mapper")
@@ -55,7 +55,7 @@ if not check_ollama_server():
         
         3. In a new terminal, pull the required model:
            ```bash
-           ollama pull llama2
+           ollama pull llama3.1
            ```
         
         After completing these steps, refresh this page.
