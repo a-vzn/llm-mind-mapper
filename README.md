@@ -44,8 +44,8 @@ git clone https://github.com/aviralsomani/llm-mind-mapper.git
 cd llm-mind-mapper
 
 # Create a virtual environment (optional but recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+pyenv virtualenv create llm-mind-mapper
+pyenv activate llm-mind-mapper
 
 # Install dependencies
 pip install -r requirements.txt
