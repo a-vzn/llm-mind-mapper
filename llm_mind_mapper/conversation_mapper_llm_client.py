@@ -11,6 +11,7 @@ class ConversationMapperLLMClient:
         self.llm = llm
         self.parser = PydanticOutputParser(pydantic_object=ConversationResult)
         self.prompt_template = PromptTemplate(
+            input_variables=["conversation"],
             template="""You are a conversation analyzer that extracts concepts and their relationships from conversations.
 
 Task: Analyze the conversation below and create a structured representation of the concepts discussed and their relationships.
