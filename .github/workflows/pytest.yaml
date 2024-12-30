@@ -34,7 +34,7 @@ jobs:
     - name: Convert coverage to Markdown
       run: |
         pip install coverage-badge
-        python -m coverage-badge -o coverage.svg
+        coverage-badge -o coverage.svg
         python -c python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); total = root.find('coverage').get('line-rate'); print(f'## Coverage Report\n\n**Coverage**: {float(total) * 100:.2f}%')" > coverage.md
 
     - name: Post coverage comment on PR
