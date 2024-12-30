@@ -27,6 +27,30 @@ jobs:
         pip install pytest pytest-cov
         pip install -r requirements.txt
 
-    - name: Run tests
+    - name: Run tests with coverage
       run: |
-        pytest ./tests
+        pytest --cov=. --cov-report=term-missing --cov-report=xml ./tests
+
+    - name: Convert coverage to Markdown
+      run: |
+        pip install coverage-badge
+        python -m coverage-badge -o coverage.svg
+        python -c "
+from xml.etree import ElementTree as ET
+tree = ET.parse('coverage.xml')
+root = tree.getroot()
+total = root.find('coverage').get('line-rate')
+print(f'## Coverage Report\n\n**Coverage**: {float(total) * 100:.2f}%')
+        " > coverage.md
+
+    - name: Post coverage comment on PR
+      if: github.event_name == 'pull_request'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        COMMENT_BODY=$(cat coverage.md)
+        curl -X POST \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+          -d "{\"body\": \"$COMMENT_BODY\"}"
