@@ -36,6 +36,7 @@ jobs:
         pip install coverage-badge
         coverage-badge -o coverage.svg
         python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); total = root.get('line-rate'); print(f'## Coverage Report\n\n**Coverage**: {float(total) * 100:.2f}%')" > coverage.md
+        cat coverage.md
 
     - name: Post coverage comment on PR
       if: github.event_name == 'pull_request'
