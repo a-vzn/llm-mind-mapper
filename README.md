@@ -51,7 +51,7 @@ git clone https://github.com/aviralsomani/llm-mind-mapper.git
 cd llm-mind-mapper
 
 # Create a virtual environment (optional but recommended)
-pyenv virtualenv create llm-mind-mapper
+pyenv virtualenv llm-mind-mapper
 pyenv activate llm-mind-mapper
 
 # Install the package in development mode
