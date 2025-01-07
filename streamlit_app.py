@@ -107,8 +107,8 @@ if transcript:
         with st.spinner("Analyzing conversation and generating mind map..."):
             # Create the mind map
             client = ConversationMapperLLMClient(conversation=transcript, llm=llm)
-            conversation_map = client.map_conversation()
-            mind_mapper = MindMapper(conversation_map, config=config)
+            mind_mapper = client.map_conversation()
+
             
             # Save the mind map
             mind_mapper.save(output_filename)

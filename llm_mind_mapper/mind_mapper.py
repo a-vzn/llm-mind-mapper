@@ -26,6 +26,7 @@ class MindMapper(Network):
         self.nodes = conversation_map.concepts
         self.edges = conversation_map.relationships
         self.rejected_edges = []
+        self.missing_concepts = []
         self.network = Network(
             height=self.config.network_height,
             width=self.config.network_width
@@ -50,6 +51,10 @@ class MindMapper(Network):
         if source not in self.nodes or target not in self.nodes:
             logger.warning(f"Rejected edge: {source} -> {target} (nodes not found)")
             self.rejected_edges.append((source, target))
+            if source not in self.nodes:
+                self.missing_concepts.append(source)
+            if target not in self.nodes:
+                self.missing_concepts.append(target)
         else:
             logger.debug(f"Adding edge: {source} -> {target}")
             self.network.add_edge(hash(source), hash(target))
