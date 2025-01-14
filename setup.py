@@ -13,6 +13,7 @@ setup(
         "pydantic",
         "pytest",
         "requests",
+        "setuptools",
     ],
     author="Aviral Somani",
     description="A mind mapping tool that uses LLMs to analyze conversations",
