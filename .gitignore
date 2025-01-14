@@ -175,3 +175,6 @@ cython_debug/
 .streamlit/
 
 output/
+
+# Visualization storage
+visualizations/
