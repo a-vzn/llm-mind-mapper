@@ -8,10 +8,14 @@ import json
 from llm_mind_mapper.mind_mapper import MindMapper
 from llm_mind_mapper.conversation_mapper_llm_client import ConversationMapperLLMClient
 from llm_mind_mapper.config import load_config
+from llm_mind_mapper.visualization_store import VisualizationStore
 from langchain_ollama import OllamaLLM
 
 # Load configuration
 config = load_config()
+
+# Initialize visualization store
+store = VisualizationStore()
 
 def check_ollama_server():
     """Check if Ollama server is running and accessible."""
@@ -38,106 +42,150 @@ def get_available_models():
 st.title("Conversation Mind Mapper")
 st.write("Generate interactive mind maps from conversation transcripts using LLMs")
 
-# Check Ollama server status
-if not check_ollama_server():
-    st.error("""
-        ⚠️ Ollama server is not running. Please follow these steps:
-        
-        1. Install Ollama if you haven't already:
-           ```bash
-           curl https://ollama.ai/install.sh | sh
-           ```
-        
-        2. Start the Ollama server:
-           ```bash
-           ollama serve
-           ```
-        
-        3. In a new terminal, pull the required model:
-           ```bash
-           ollama pull llama3.1
-           ```
-        
-        After completing these steps, refresh this page.
-    """)
-    st.stop()
+# Add tabs for new and previous visualizations
+tab1, tab2 = st.tabs(["New Visualization", "Previous Visualizations"])
 
-# Sidebar configuration
-st.sidebar.title("Configuration")
+with tab1:
+    # Check Ollama server status
+    if not check_ollama_server():
+        st.error("""
+            ⚠️ Ollama server is not running. Please follow these steps:
+            
+            1. Install Ollama if you haven't already:
+               ```bash
+               curl https://ollama.ai/install.sh | sh
+               ```
+            
+            2. Start the Ollama server:
+               ```bash
+               ollama serve
+               ```
+            
+            3. In a new terminal, pull the required model:
+               ```bash
+               ollama pull llama3.1
+               ```
+            
+            After completing these steps, refresh this page.
+        """)
+        st.stop()
 
-# Get available models and create dropdown
-available_models = get_available_models()
-default_model_index = available_models.index(config.llm_model) if config.llm_model in available_models else 0
-model_name = st.sidebar.selectbox(
-    "Select LLM Model",
-    available_models,
-    index=default_model_index,
-    help="Choose the Ollama model to use for analysis"
-)
+    # Sidebar configuration
+    with st.sidebar:
+        st.title("Configuration")
 
-# Add a button to pull new models
-if st.sidebar.button("Pull New Model"):
-    model_to_pull = st.sidebar.text_input("Enter model name to pull (e.g., llama2:13b)")
-    if model_to_pull:
+        # Get available models and create dropdown
+        available_models = get_available_models()
+        default_model_index = available_models.index(config.llm_model) if config.llm_model in available_models else 0
+        model_name = st.selectbox(
+            "Select LLM Model",
+            available_models,
+            index=default_model_index,
+            help="Choose the Ollama model to use for analysis"
+        )
+
+        # Add a button to pull new models
+        if st.button("Pull New Model"):
+            model_to_pull = st.text_input("Enter model name to pull (e.g., llama2:13b)")
+            if model_to_pull:
+                try:
+                    with st.spinner(f"Pulling model {model_to_pull}..."):
+                        result = requests.post(
+                            "http://localhost:11434/api/pull",
+                            json={"name": model_to_pull}
+                        )
+                        if result.status_code == 200:
+                            st.success(f"Successfully pulled model: {model_to_pull}")
+                            st.rerun()
+                        else:
+                            st.error(f"Failed to pull model: {result.text}")
+                except Exception as e:
+                    st.error(f"Error pulling model: {str(e)}")
+
+        output_filename = st.text_input("Output Filename", value=config.default_map_filename)
+
+    # Text area to input the conversation transcript
+    transcript = st.text_area("Enter the conversation transcript:")
+
+    # Initialize LLM and process the transcript
+    if transcript:
         try:
-            with st.spinner(f"Pulling model {model_to_pull}..."):
-                result = requests.post(
-                    "http://localhost:11434/api/pull",
-                    json={"name": model_to_pull}
-                )
-                if result.status_code == 200:
-                    st.success(f"Successfully pulled model: {model_to_pull}")
-                    st.rerun()
-                else:
-                    st.error(f"Failed to pull model: {result.text}")
+            with st.spinner("Initializing LLM..."):
+                llm = OllamaLLM(model=model_name)
+                
+            with st.spinner("Analyzing conversation and generating mind map..."):
+                # Create the mind map
+                client = ConversationMapperLLMClient(conversation=transcript, llm=llm)
+                conversation_map = client.map_conversation()
+                mind_mapper = MindMapper(conversation_map, config=config)
+                
+                # Save the mind map
+                mind_mapper.save(output_filename)
+                
+                # Get the HTML content
+                output_path = os.path.join(config.output_dir, output_filename)
+                with open(output_path, "r") as file:
+                    html_content = file.read()
+                
+                # Store the visualization only if it's a new run (using session state)
+                if 'last_transcript' not in st.session_state or st.session_state.last_transcript != transcript:
+                    store.store_visualization(transcript, conversation_map, html_content)
+                    st.session_state.last_transcript = transcript
+                
+                # Display the mind map
+                components.html(html_content, height=750, scrolling=True)
+                
+                # Display statistics
+                with st.sidebar:
+                    st.markdown("## Statistics")
+                    st.markdown(f"Number of concepts: {len(mind_mapper.nodes)}")
+                    st.markdown(f"Number of relationships: {len(mind_mapper.edges)}")
+                    if mind_mapper.rejected_edges:
+                        st.markdown(f"Number of rejected relationships: {len(mind_mapper.rejected_edges)}")
+                    
         except Exception as e:
-            st.error(f"Error pulling model: {str(e)}")
+            st.error(f"""
+                An error occurred: {str(e)}
+                
+                If this is a connection error, please make sure:
+                1. Ollama is installed and running
+                2. The selected model ({model_name}) is available
+                
+                You can install a model using:
+                ```bash
+                ollama pull {model_name}
+                ```
+            """)
+    else:
+        st.info("Enter a conversation transcript to generate a mind map")
 
-output_filename = st.sidebar.text_input("Output Filename", value=config.default_map_filename)
-
-# Text area to input the conversation transcript
-transcript = st.text_area("Enter the conversation transcript:")
-
-# Initialize LLM and process the transcript
-if transcript:
-    try:
-        with st.spinner("Initializing LLM..."):
-            llm = OllamaLLM(model=model_name)
+with tab2:
+    st.header("Previous Visualizations")
+    
+    # Get all visualizations
+    visualizations = store.get_all_visualizations()
+    
+    if not visualizations:
+        st.info("No previous visualizations found.")
+    else:
+        # Create a selectbox for visualization selection
+        selected_viz = st.selectbox(
+            "Select a visualization to view",
+            visualizations,
+            format_func=lambda x: f"{x.timestamp} ({len(x.conversation_result.concepts)} concepts)"
+        )
+        
+        if selected_viz:
+            # Display the selected visualization
+            st.subheader("Original Transcript")
+            st.text_area("Transcript", selected_viz.transcript, height=200, disabled=True)
             
-        with st.spinner("Analyzing conversation and generating mind map..."):
-            # Create the mind map
-            client = ConversationMapperLLMClient(conversation=transcript, llm=llm)
-            conversation_map = client.map_conversation()
-            mind_mapper = MindMapper(conversation_map, config=config)
-            
-            # Save the mind map
-            mind_mapper.save(output_filename)
-            
-            # Display the mind map
-            output_path = os.path.join(config.output_dir, output_filename)
-            with open(output_path, "r") as file:
-                html_content = file.read()
+            st.subheader("Mind Map")
+            with open(selected_viz.html_path, "r") as f:
+                html_content = f.read()
             components.html(html_content, height=750, scrolling=True)
             
             # Display statistics
             st.sidebar.markdown("## Statistics")
-            st.sidebar.markdown(f"Number of concepts: {len(mind_mapper.nodes)}")
-            st.sidebar.markdown(f"Number of relationships: {len(mind_mapper.edges)}")
-            if mind_mapper.rejected_edges:
-                st.sidebar.markdown(f"Number of rejected relationships: {len(mind_mapper.rejected_edges)}")
-                
-    except Exception as e:
-        st.error(f"""
-            An error occurred: {str(e)}
-            
-            If this is a connection error, please make sure:
-            1. Ollama is installed and running
-            2. The selected model ({model_name}) is available
-            
-            You can install a model using:
-            ```bash
-            ollama pull {model_name}
-            ```
-        """)
-else:
-    st.info("Enter a conversation transcript to generate a mind map")
+            st.sidebar.markdown(f"Number of concepts: {len(selected_viz.conversation_result.concepts)}")
+            st.sidebar.markdown(f"Number of relationships: {len(selected_viz.conversation_result.relationships)}")

@@ -117,6 +117,14 @@ config = MindMapperConfig(
 )
 ```
 
+## Testing
+
+Make sure you're in the pyenv virtual environment then run the below: 
+
+```
+pytest
+```
+
 ### Available Models
 
 The tool supports any model available through Ollama. You can:
